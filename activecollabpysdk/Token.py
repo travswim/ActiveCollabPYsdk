@@ -10,10 +10,10 @@ class Token:
             raise InvalidArgumentError("Not a valid URL")
 
     def __str__(self) -> str:
-        return f'Token: {self.token}'
+        return f'Token: {self.token}; URL: {self.url}'
 
     def __repr__(self) -> str:
-        return f'Token: {self.token}'
+        return f'Token: {self.token}; URL: {self.url}'
 
     @property
     def token(self):

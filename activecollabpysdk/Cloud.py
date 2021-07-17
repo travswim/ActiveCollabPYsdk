@@ -89,8 +89,8 @@ class Cloud(Authenticator):
             except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
 
-            if r.json() and r.headers['content-type'] == 'application/json':
-                return self.issueTokenResponseToToken(r, self.accounts['account_id']['url'])
+            if r.json() and 'application/json' in r.headers['content-type']:
+                return self.issueTokenResponseToToken(r, self.accounts[account_ID]['url'])
 
             else:
                 raise AuthenticationError("Invalid response")
