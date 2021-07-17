@@ -162,6 +162,3 @@ class Cloud(Authenticator):
                 raise AuthenticationError(f'Invalid response. JSON expected, got {content_type}, status code {http_code}')
         else:
             raise InvalidResponse('Invalid response')
-a = Cloud('me', 'i', 'my@gmail.com', 'for')
-
-print(a.email_address)

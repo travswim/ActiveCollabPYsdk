@@ -10,6 +10,9 @@ url = os.getenv('AC_URL')
 my_email = os.getenv('AC_EMAIL')
 my_password = os.getenv(('AC_PASSWORD'))
 
+
+
+
 if (url == None or my_email == None or my_password == None):
     raise ValueError(f'Cannot be empty value:\nurl = {url}\nmy_email = {my_email}\nmy_password = {my_password}')
 
