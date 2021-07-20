@@ -123,9 +123,6 @@ class Cloud(Authenticator):
             try:
                 r = requests.post(url, json=data, headers=headers)
                 r.raise_for_status()  
-            except requests.HTTPError as e:
-                raise SystemExit(e)
-
             except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
             
