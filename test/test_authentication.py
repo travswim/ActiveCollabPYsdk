@@ -3,8 +3,11 @@ from dotenv import load_dotenv
 import unittest
 from Token import Token
 from activecollabpysdk.Cloud import Cloud
+from types import Any
 
 class Test_Login(unittest.TestCase):
+    
+    
     def test_login_success(self) -> None:
 
         load_dotenv()
@@ -17,7 +20,7 @@ class Test_Login(unittest.TestCase):
         my_account_id = os.getenv('AC_ACCOUNT_ID') # int
 
         if type(my_account_id) == str:
-            my_account_id = int(my_account_id)
+            my_account_id = int(Any(my_account_id))
         else:
             raise ValueError("Empty account ID")
         if my_email and my_password:
