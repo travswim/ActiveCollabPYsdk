@@ -1,10 +1,14 @@
+from io import BufferedReader
 from typing import Any
 from Exceptions import InvalidArgumentError
 from Token import Token
 import validators 
 from urllib import parse
 import requests
+import os
+
 class Client:
+    """Client connection class for connecting to ActiveCollab API"""
 
     def __init__(self, token: Token, api_version: int = None) -> None:
         self.__token = token
@@ -13,7 +17,11 @@ class Client:
             if type(api_version) == int and api_version > 0:
                 self.__api_version = api_version
             else:
-                raise InvalidArgumentError("No a valid API version")
+                raise InvalidArgumentError("Not a valid API version")
+
+        self.__header = {'X-Angie-AuthApiToken: ' + self.token}
+    
+    # Getter & Setter properties
     @property
     def token(self):
         return self.__token.token
@@ -47,10 +55,9 @@ class Client:
         else:
             raise InvalidArgumentError("Invalid API version")
 
-    def __prepare_header(self):
-        return ['X-Angie-AuthApiToken: ' + self.token]
 
     def __prepare_url(self, url: str) -> str:
+        """Prepares a given URL for making http requests"""
         if not url:
             raise InvalidArgumentError("Invalid URL")
 
@@ -64,30 +71,54 @@ class Client:
 
         return self.url + 'api/v' + self.api_version + path + query
 
-    def __prepare_params(self, params: dict):
+    def __prepare_params(self, params: dict) -> dict:
+        """Prepare given dictionary {parameters} to post to ActiveCollab"""
         return params or {}
 
-    def __prepare_files(self, file_paths: list[str]):
-        files = {}
-        for file in file_paths:
-            try:
+    def __prepare_files(self, attachments: list[str]) -> dict[str, BufferedReader]:
+        """Converts a list file paths to post to ActiveCollab"""
 
+        file_params = {}
+
+        if attachments:
+            counter = 1
+
+            for attachment in attachments:
+                path = attachment[0] if type(attachment) is list else attachment
+
+                if not os.path.isfile(path):
+                    raise FileNotFoundError(f'{path} not found')
+
+                with open(path, 'rb') as file:
+                    file_params['attachment_' + str(counter)] = file
+                    counter +=1
+
+        return file_params
 
         
     def get(self, url: str) -> str:
+        """HTTP Get request from ActiveCollab"""
         try:
-            r = requests.get(url=self.__prepare_url(url), headers=self.__prepare_header())
+            r = requests.get(url=self.__prepare_url(url), headers=self.__header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
 
         return r.json()
 
-    def post(self, url: str, params: dict = {}):
+    def post(self, url: str, params: dict = {}, attachments: list[str] = []) -> None:
+        """HTTP Post request to ActiveCollab"""
         try:
-            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.__prepare_header())
+
+            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.__header, files=self.__prepare_files(attachments))
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
 
-    
+    def delete(self, url:str, params: dict):
+        """HTTP Delete request to ActiveCollab"""
+        try:
+            r = requests.delete(url = self.__prepare_url(url), headers=self.__header, json=self.__prepare_params(params))
+            r.raise_for_status()
+        except requests.exceptions.RequestException as e:
+                raise SystemExit(e)
