@@ -1,0 +1,4 @@
+- [ ] Finish porting to python
+- [ ] use pydantic for python validation
+- [ ] Github actions for testing
+- [ ] pepy python project download info https://pepy.tech/
