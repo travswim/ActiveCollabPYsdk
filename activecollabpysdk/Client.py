@@ -1,13 +1,16 @@
 from io import BufferedReader
 from typing import Any
+
+from requests.models import Response
 from Exceptions import InvalidArgumentError
 from Token import Token
 import validators 
 from urllib import parse
 import requests
 import os
+from client_interface import ClientInterface
 
-class Client:
+class Client(ClientInterface):
     """Client connection class for connecting to ActiveCollab API"""
 
     def __init__(self, token: Token, api_version: int = None) -> None:
@@ -20,6 +23,7 @@ class Client:
                 raise InvalidArgumentError("Not a valid API version")
 
         self.__header = {'X-Angie-AuthApiToken: ' + self.token}
+        self.info_response: Any = False
     
     # Getter & Setter properties
     @property
@@ -95,8 +99,35 @@ class Client:
 
         return file_params
 
+    def info(self, property: Any = False):
+        """Summary line.
+
+        Extended description of function.
+
+        :param int arg1: Description of arg1.
+        :param str arg2: Description of arg2.
+        :raise: ValueError if arg1 is equal to arg2
+        :return: Description of return value
+        :rtype: bool
+
+        :example:
+
+        >>> a=1
+        >>> b=2
+        >>> func(a,b)
+        True
+        """
+        r = None
+
+        if not self.info_response and type(self.info_response) is bool:
+            self.info_response = self.get('info').json()
         
-    def get(self, url: str) -> str:
+        if type(property) is not bool:
+            return self.info_response[property] or None
+        else:
+            return self.info_response
+
+    def get(self, url: str) -> Response:
         """HTTP Get request from ActiveCollab"""
         try:
             r = requests.get(url=self.__prepare_url(url), headers=self.__header)
@@ -104,7 +135,7 @@ class Client:
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
 
-        return r.json()
+        return r
 
     def post(self, url: str, params: dict = {}, attachments: list[str] = []) -> None:
         """HTTP Post request to ActiveCollab"""
@@ -115,7 +146,16 @@ class Client:
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
 
-    def delete(self, url:str, params: dict):
+    def put(self, url: str, params: dict = {}) -> None:
+        """HTTP Put request to ActiveCollab"""
+        try:
+
+            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.__header)
+            r.raise_for_status()
+        except requests.exceptions.RequestException as e:
+                raise SystemExit(e)
+
+    def delete(self, url:str, params: dict) -> None:
         """HTTP Delete request to ActiveCollab"""
         try:
             r = requests.delete(url = self.__prepare_url(url), headers=self.__header, json=self.__prepare_params(params))
