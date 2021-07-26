@@ -6,15 +6,15 @@ from Token import Token
 
 class Authenticator:
     
-    def __init__(self, your_org_name: str, your_app_name: str, email_address, password: str) -> None:
+    def __init__(self, your_org_name: str, your_app_name: str, email_address: str, password: str) -> None:
         
-        self.__org_name = your_org_name
-        self.__app_name = your_app_name
-        if validators.email(email_address):
-            self.__email_address = email_address
+        self.__org_name: str = your_org_name
+        self.__app_name: str = your_app_name
+        if validators.email(Any(email_address)):
+            self.__email_address: str = email_address
         else:
             raise ValueError('Not a valid email address')
-        self.__password = password
+        self.__password: str = password
     
     # Getter/setter functions for Organization Name
     @property
