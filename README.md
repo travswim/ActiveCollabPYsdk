@@ -4,3 +4,4 @@
 - [ ] pepy python project download info https://pepy.tech/
 - [ ] docstrings: https://queirozf.com/entries/python-docstrings-reference-examples
 - [ ] Should Token be a dataclass? What comprises of a dataclass?
+- [ ] Should class member types be defined in the init or as static members?
