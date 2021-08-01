@@ -3,8 +3,7 @@ from typing import Any
 
 from requests.models import Response
 from Exceptions import InvalidArgumentError
-from Token import Token
-import validators 
+from token_sdk import Token
 from urllib import parse
 import requests
 import os
@@ -14,51 +13,17 @@ class Client(ClientInterface):
     """Client connection class for connecting to ActiveCollab API"""
 
     def __init__(self, token: Token, api_version: int = None) -> None:
-        self.__token = token
+        self.token = token
         
         if api_version != None:
-            if type(api_version) == int and api_version > 0:
-                self.__api_version = api_version
-            else:
-                raise InvalidArgumentError("Not a valid API version")
+            if api_version < 0:
+                raise InvalidArgumentError(f'{api_version} is not a valid API version')
+            self.api_version = api_version                
 
-        self.__header = {'X-Angie-AuthApiToken: ' + self.token}
+        self.header = {'X-Angie-AuthApiToken: ' + self.token.token}
         self.info_response: Any = False
     
-    # Getter & Setter properties
-    @property
-    def token(self):
-        return self.__token.token
-
-    @token.setter
-    def token(self, value: str):
-        if value != None:
-            self.__token.token = value
-        else:
-            raise ValueError("Cannot be None")
-
-    @property
-    def url(self):
-        return self.__token.url
-
-    @url.setter
-    def url(self, value: str):
-        if validators.url(Any(value)) and value:
-            self.__url = value
-        else:
-            raise InvalidArgumentError("URL is not valid")
-
-    @property
-    def api_version(self):
-        return self.__api_version
-
-    @api_version.setter
-    def api_version(self, value: int):
-        if value > 0:
-            self.__api_version = value
-        else:
-            raise InvalidArgumentError("Invalid API version")
-
+    
 
     def __prepare_url(self, url: str) -> str:
         """Prepares a given URL for making http requests"""
@@ -73,14 +38,21 @@ class Client(ClientInterface):
 
         query = '/' + parse_url.query if parse_url.query else ''
 
-        return self.url + 'api/v' + self.api_version + path + query
+        return url + 'api/v' + str(self.api_version) + path + query
 
     def __prepare_params(self, params: dict) -> dict:
         """Prepare given dictionary {parameters} to post to ActiveCollab"""
         return params or {}
 
     def __prepare_files(self, attachments: list[str]) -> dict[str, BufferedReader]:
-        """Converts a list file paths to post to ActiveCollab"""
+        """Converts a list of file paths to file objects.
+
+        Converts a list of file paths to file objects. Used by post() method to post files to ActiveCollab
+
+        :param list[str] attachments: List of file paths
+        :return: dictionary of filenames (key) and file objects (value).
+        :rtype: dict[str, BufferedReader]
+        """
 
         file_params = {}
 
@@ -100,24 +72,12 @@ class Client(ClientInterface):
         return file_params
 
     def info(self, property: Any = False):
-        """Summary line.
+        """Retrieves a cached info response
 
-        Extended description of function.
-
-        :param int arg1: Description of arg1.
-        :param str arg2: Description of arg2.
-        :raise: ValueError if arg1 is equal to arg2
-        :return: Description of return value
-        :rtype: bool
-
-        :example:
-
-        >>> a=1
-        >>> b=2
-        >>> func(a,b)
-        True
+        :param Any property: Flag
+        :return: Cached info response if succesful; False otherwise
+        :rtype: str|bool
         """
-        r = None
 
         if not self.info_response and type(self.info_response) is bool:
             self.info_response = self.get('info').json()
@@ -128,9 +88,18 @@ class Client(ClientInterface):
             return self.info_response
 
     def get(self, url: str) -> Response:
-        """HTTP Get request from ActiveCollab"""
+        """HTTP Get request to ActiveCollab
+
+            Makes a get request to active collab using the provided URL
+
+            :param str url: URL to send get request.
+            :raise: SystemExit() on failure
+            :return: HTTP response
+            :rtype: Response
+        
+        """
         try:
-            r = requests.get(url=self.__prepare_url(url), headers=self.__header)
+            r = requests.get(url=self.__prepare_url(url), headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
@@ -138,27 +107,56 @@ class Client(ClientInterface):
         return r
 
     def post(self, url: str, params: dict = {}, attachments: list[str] = []) -> None:
-        """HTTP Post request to ActiveCollab"""
+        """HTTP Post request to ActiveCollab (Create New)
+
+            Makes a post request to ActiveCollab using the provided URL, parameters/data, and attachments (optional)
+
+            :param str url: URL to make post request.
+            :param dict param: Data to post to ActiveCollab.
+            :param list[str] attachments: Data to post to ActiveCollab.
+            :raise: SystemExit() on request, connection, or HTTP failure
+            :return: HTTP response
+            :rtype: Response
+        
+        """
         try:
 
-            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.__header, files=self.__prepare_files(attachments))
+            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.header, files=self.__prepare_files(attachments))
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
 
     def put(self, url: str, params: dict = {}) -> None:
-        """HTTP Put request to ActiveCollab"""
+        """HTTP Put request from ActiveCollab (Insert/Replace)
+
+            Makes a get request to active collab using the provided URL
+
+            :param str url: URL to send get request.
+            :param dict params: parameters to put to ActiveCollab
+            :raise: SystemExit() on request, connection, or HTTP failure
+            :return:
+            :rtype: None
+        """
         try:
 
-            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.__header)
+            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
 
     def delete(self, url:str, params: dict) -> None:
-        """HTTP Delete request to ActiveCollab"""
+        """HTTP Delete request from ActiveCollab
+
+            Makes a delete request to ActiveCollab using the provided URL and parameters
+
+            :param str url: URL to send get request.
+            :param dict params: parameters to delete from ActiveCollab
+            :raise: SystemExit() on request, connection, or HTTP failure
+            :return:
+            :rtype: None
+        """
         try:
-            r = requests.delete(url = self.__prepare_url(url), headers=self.__header, json=self.__prepare_params(params))
+            r = requests.delete(url = self.__prepare_url(url), headers=self.header, json=self.__prepare_params(params))
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
