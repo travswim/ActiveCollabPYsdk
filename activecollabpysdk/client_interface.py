@@ -10,12 +10,7 @@ class ClientInterface(metaclass = ABCMeta):
     
     @abstractmethod
     def info(self, property: Any = False):
-        """Returns info
-
-        :param bool|str property: -
-        """
         pass
-
 
     @abstractmethod
     def get(self, url: str) -> str:
