@@ -1,5 +1,5 @@
-from Token import Token
-from Authenticator import Authenticator
+from token_sdk import Token
+from authenticator import Authenticator
 from Exceptions import AuthenticationError, EmptyArgumentError, InvalidArgumentError, InvalidResponse
 import requests
 
@@ -9,11 +9,10 @@ class Cloud(Authenticator):
         super().__init__(your_org_name, your_app_name, email_address, password)
         self.__accounts_and_user_loaded = False
         self.__accounts = {}
-        # self.__all_accounts = []
         self.__user = {}
         self.__intent = ""
     
-    
+    # Getter/setters
     @property
     def accounts_and_user_loaded(self) -> bool:
         return self.__accounts_and_user_loaded
@@ -68,6 +67,7 @@ class Cloud(Authenticator):
         Returns:
             Token: A token object containing both the issued token and url
         """
+
         if not account_ID:
             raise EmptyArgumentError("Need to provide an account ID (int)")
 
@@ -75,27 +75,22 @@ class Cloud(Authenticator):
 
         if account_ID not in self.accounts:
             raise InvalidArgumentError("Account ID is invalid")
-        else:
-            url = 'https://app.activecollab.com/' + str(account_ID) + '/api/v1/issue-token-intent'
-            email = self.email_address
-            app_name = self.app_name
-            intent = self.intent
-            try:
-                r = requests.post(url, data={'client_vendor': email, 'client_name': app_name, 'intent': intent})
-                r.raise_for_status() 
-            except requests.HTTPError as e:
-                raise SystemExit(e)
+        
+        url = 'https://app.activecollab.com/' + str(account_ID) + '/api/v1/issue-token-intent'
+        email = self.email_address
+        app_name = self.app_name
+        intent = self.intent
 
-            except requests.exceptions.RequestException as e:
-                raise SystemExit(e)
+        try:
+            r = requests.post(url, data={'client_vendor': email, 'client_name': app_name, 'intent': intent})
+            r.raise_for_status() 
 
-            if r.json() and 'application/json' in r.headers['content-type']:
-                return self.issueTokenResponseToToken(r, self.accounts[account_ID]['url'])
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(e)
 
-            else:
-                raise AuthenticationError("Invalid response")
-
-
+        if not r.json() and 'application/json' not in r.headers['content-type']:
+            raise AuthenticationError("Invalid response")
+        return self.issueTokenResponseToToken(r, self.accounts[account_ID]['url'])
 
     def __load_accounts_and_users(self):
         """Loads the account information related to an ActiveCollab user
@@ -157,5 +152,3 @@ class Cloud(Authenticator):
                 content_type = r.headers['content-type']
                 http_code = r.status_code
                 raise AuthenticationError(f'Invalid response. JSON expected, got {content_type}, status code {http_code}')
-        else:
-            raise InvalidResponse('Invalid response')
