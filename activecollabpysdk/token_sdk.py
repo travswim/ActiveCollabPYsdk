@@ -4,8 +4,8 @@ from Exceptions import InvalidArgumentError
 from dataclasses import dataclass   
 
 @dataclass
-class Tokens:
-
+class Token:
+    """A dataclass for tokens"""
     token: str
     url: str
 
