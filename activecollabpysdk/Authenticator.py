@@ -1,6 +1,5 @@
 from requests.models import Response
 from Exceptions import AuthenticationError
-from typing import Any
 import validators
 from authenticator_interface import AuthenticatorInterface
 from token_sdk import Token
@@ -12,7 +11,7 @@ class Authenticator(AuthenticatorInterface):
         
         self.org_name: str = your_org_name
         self.app_name: str = your_app_name
-        if not validators.email(Any(email_address)):
+        if not validators.email(email_address):
             raise ValueError('Not a valid email address')
         self.email_address: str = email_address         
         self.password: str = password

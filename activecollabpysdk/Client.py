@@ -2,7 +2,6 @@ from io import BufferedReader
 from typing import Any
 
 from requests.models import Response
-import validators
 from Exceptions import InvalidArgumentError
 from token_sdk import Token
 from urllib import parse
@@ -15,13 +14,14 @@ class Client(ClientInterface):
 
     def __init__(self, token: Token, api_version: int = None) -> None:
         self.token = token
-        
-        if api_version != None:
-            if api_version < 0:
-                raise InvalidArgumentError(f'{api_version} is not a valid API version')
-            self.api_version = api_version                
 
-        self.header = {'X-Angie-AuthApiToken: ' + self.token.token}
+        if api_version is None:
+            self.api_version = 1
+        elif api_version < 0:
+            raise InvalidArgumentError(f'{api_version} is not a valid API version')
+        else:
+            self.api_version = api_version
+        self.header = {"X-Angie-AuthApiToken" : self.token.token}
         self.info_response: Any = False
     
     
@@ -35,18 +35,18 @@ class Client(ClientInterface):
         :return: A valid URL
         :rtype: str
         """
-        if not url or not validators.url(Any(url)):
+        if not url:
             raise InvalidArgumentError(f'{url} is invalid')
 
-        parse_url = parse(url)
+        parse_url = parse.urlsplit(url)
             
         path = parse_url.path or '/'
         
-        path = '/' + path if path[0] == '/' else path
+        path = '/' + path if path[0] != '/' else path
 
         query = '/' + parse_url.query if parse_url.query else ''
 
-        return url + 'api/v' + str(self.api_version) + path + query
+        return self.token.url + '/api/v' + str(self.api_version) + path + query
 
     # def __prepare_params(self, params: dict[str, Any]) -> dict[str, Any]:
     #     """Prepare given dictionary {parameters} to post to ActiveCollab

@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from requests.models import Response
 from token_sdk import Token
 
-class AuthenticatorInterface(meta=ABCMeta):
+class AuthenticatorInterface(metaclass=ABCMeta):
     """Base class for Authentication"""
 
     @abstractmethod

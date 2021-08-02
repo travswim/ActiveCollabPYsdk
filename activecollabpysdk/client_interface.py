@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Any
 
-class ClientInterface(metaclass = ABCMeta):
+class ClientInterface(metaclass=ABCMeta):
     """Base class for Client"""
     
     def __init__(self) -> None:
