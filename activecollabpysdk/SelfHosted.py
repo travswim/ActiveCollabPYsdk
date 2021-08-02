@@ -1,26 +1,34 @@
-from Authenticator import Authenticator
+from typing import Any
+from authenticator import Authenticator
 import validators
 from Exceptions import AuthenticationError, InvalidArgumentError
 import requests
 
 class SelfHosted(Authenticator):
+    """Self hosted interface for ActiveCollab"""
 
     def __init__(self, your_org_name: str, your_app_name: str, email_address: str, password: str, self_hosted_url: str, api_version: int) -> None:
         super().__init__(your_org_name, your_app_name, email_address, password)
 
-        if validators.url(self_hosted_url):
-            self.__self_hosted_url = self_hosted_url
-        else:
-            raise InvalidArgumentError("Self hoste URL is not valid")
-        
-        if api_version > 0:
-            self.__api_version = api_version
-        else:
-            raise InvalidArgumentError("Invalid api version")
+        if not validators.url(Any(self_hosted_url)):
+            raise InvalidArgumentError(f'Self hoste URL {self_hosted_url} is not valid')
+        self.self_hosted_url = self_hosted_url
 
-    
+        if api_version <= 0:
+            raise InvalidArgumentError(f'{api_version} is an invalid api version')
+        self.api_versionself_hosted_url = api_version
+            
+
     def issueToken(self):
-        request_url = f'{self.__self_hosted_url}/api/v{self.__api_version}/issue-token'
+        """Issues a token for a self hosted ActiveCollab acocunt
+
+        :raise: SystemExit() on request, connection, or HTTP failure
+        :raise: AuthenticationError() on an invalid json response
+        :return: A Token object
+        :rtype: Token
+        """
+
+        request_url = f'{self.self_hosted_url}/api/v{self.api_versionself_hosted_url}/issue-token'
 
         data =  {
             'username': self.email_address,
@@ -48,7 +56,7 @@ class SelfHosted(Authenticator):
             response = r.json()
 
             if not response['is_ok'] or not response['token']:
-                raise AuthenticationError("Authentication rejected")
-
-            else:
-                return
+                contentType = r.headers['content-type']
+                raise AuthenticationError(f'Invalid response from {request_url}. JSON expected, got {contentType}, status code {r.status_code}')
+            
+            return self.issueTokenResponseToToken(r, self.self_hosted_url)
