@@ -3,5 +3,15 @@
 - [ ] Github actions for testing
 - [ ] pepy python project download info https://pepy.tech/
 - [ ] docstrings: https://queirozf.com/entries/python-docstrings-reference-examples
-- [ ] Should Token be a dataclass? What comprises of a dataclass?
-- [ ] Should class member types be defined in the init or as static members?
+- [x] Should Token be a dataclass? What comprises of a dataclass?
+- [x] Should class member types be defined in the init or as static members?
+
+
+### Tests to perform:
+- test all methods, and raised exceptions
+- use `converage.py` to test code coverage
+
+-[ ] Authenticator
+-[ ] Client
+-[ ] Cloud
+-[ ] Token
