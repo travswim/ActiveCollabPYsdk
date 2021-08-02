@@ -4,6 +4,7 @@ from Exceptions import AuthenticationError, EmptyArgumentError, InvalidArgumentE
 import requests
 
 class Cloud(Authenticator):
+    """Cloud authentication interface for ActiveCollab"""
 
     def __init__(self, your_org_name: str, your_app_name: str, email_address: str, password: str) -> None:
         super().__init__(your_org_name, your_app_name, email_address, password)
@@ -59,13 +60,13 @@ class Cloud(Authenticator):
         self.__intent = value
 
     def issue_token(self, account_ID: int) -> Token:
-        """Issues a token for a given account ID
+        """Issues a token for a cloud hosted ActiveCollab account
 
-        Args:
-            account_ID (int): Account ID of the account to issue a token
-
-        Returns:
-            Token: A token object containing both the issued token and url
+        :param int account_ID: An account ID associated with the user account
+        :raise: SystemExit() on request, connection, or HTTP failure
+        :raise: AuthenticationError() on an invalid json response
+        :return: A Token object
+        :rtype: Token
         """
 
         if not account_ID:
@@ -92,8 +93,13 @@ class Cloud(Authenticator):
             raise AuthenticationError("Invalid response")
         return self.issueTokenResponseToToken(r, self.accounts[account_ID]['url'])
 
-    def __load_accounts_and_users(self):
+    def __load_accounts_and_users(self) -> None:
         """Loads the account information related to an ActiveCollab user
+
+        :raise: AuthenticationError() on invalid email, password, response
+        :return: None
+        :rtype: None
+
         """
         
         # We have not loaded the accounts yet
@@ -102,7 +108,7 @@ class Cloud(Authenticator):
             password = self.password
             
             if not email or not password:
-                raise AuthenticationError("Password and email are empty")
+                raise AuthenticationError("Password {password} and email {email} are not valid")
 
             url = 'https://my.activecollab.com/api/v1/external/login'
             data = {

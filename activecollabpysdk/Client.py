@@ -2,6 +2,7 @@ from io import BufferedReader
 from typing import Any
 
 from requests.models import Response
+import validators
 from Exceptions import InvalidArgumentError
 from token_sdk import Token
 from urllib import parse
@@ -26,9 +27,16 @@ class Client(ClientInterface):
     
 
     def __prepare_url(self, url: str) -> str:
-        """Prepares a given URL for making http requests"""
-        if not url:
-            raise InvalidArgumentError("Invalid URL")
+        """Prepares a given URL for making http requests
+
+        Formats a url and checks if it is valid. Used by post, get, put, and delete requests to ActiveCollab
+
+        :param str url: Requests URL
+        :return: A valid URL
+        :rtype: str
+        """
+        if not url or not validators.url(Any(url)):
+            raise InvalidArgumentError(f'{url} is invalid')
 
         parse_url = parse(url)
             
@@ -40,9 +48,13 @@ class Client(ClientInterface):
 
         return url + 'api/v' + str(self.api_version) + path + query
 
-    def __prepare_params(self, params: dict) -> dict:
-        """Prepare given dictionary {parameters} to post to ActiveCollab"""
-        return params or {}
+    # def __prepare_params(self, params: dict[str, Any]) -> dict[str, Any]:
+    #     """Prepare given dictionary {parameters} to post to ActiveCollab
+        
+    #     :param dict[str, Any] params: Paramerters to pass as data or JSON to ActiveCollab
+    #     :return: A dictionary of 
+    #     """
+    #     return params or {}
 
     def __prepare_files(self, attachments: list[str]) -> dict[str, BufferedReader]:
         """Converts a list of file paths to file objects.
@@ -121,7 +133,7 @@ class Client(ClientInterface):
         """
         try:
 
-            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.header, files=self.__prepare_files(attachments))
+            r = requests.post(url=self.__prepare_url(url), json=params, headers=self.header, files=self.__prepare_files(attachments))
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
@@ -139,12 +151,12 @@ class Client(ClientInterface):
         """
         try:
 
-            r = requests.post(url=self.__prepare_url(url), json=self.__prepare_params(params), headers=self.header)
+            r = requests.post(url=self.__prepare_url(url), json=params, headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)
 
-    def delete(self, url:str, params: dict) -> None:
+    def delete(self, url:str, params: dict = {}) -> None:
         """HTTP Delete request from ActiveCollab
 
             Makes a delete request to ActiveCollab using the provided URL and parameters
@@ -156,7 +168,7 @@ class Client(ClientInterface):
             :rtype: None
         """
         try:
-            r = requests.delete(url = self.__prepare_url(url), headers=self.header, json=self.__prepare_params(params))
+            r = requests.delete(url = self.__prepare_url(url), headers=self.header, json=params)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e)

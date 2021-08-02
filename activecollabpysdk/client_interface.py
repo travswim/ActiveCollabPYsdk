@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Any
 
 class ClientInterface(metaclass = ABCMeta):
-    """Base class for client interface"""
+    """Base class for Client"""
     
     def __init__(self) -> None:
         self.__version = '3.0.0'
