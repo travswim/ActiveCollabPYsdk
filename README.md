@@ -10,6 +10,9 @@
 ### Tests to perform:
 - test all methods, and raised exceptions
 - use `converage.py` to test code coverage
+- unit tests
+- integration tests
+- test coverage
 
 -[ ] Authenticator
 -[ ] Client
