@@ -1,6 +1,6 @@
-import validators
-from Exceptions import InvalidArgumentError
-from dataclasses import dataclass   
+from urllib.parse import urlparse
+from activecollabpysdk.Exceptions import InvalidArgumentError
+from dataclasses import dataclass  
 
 @dataclass
 class Token:
@@ -9,8 +9,17 @@ class Token:
     url: str
 
     def __post_init__(self):
-        if not validators.url(self.url):
+        """
+        validate the assigned url & token
+        """
+        result = urlparse(self.url)
+
+        if not all([result.scheme, result.netloc]):
             raise InvalidArgumentError(f'{self.url} is not a valid URL')
+
+        if not self.token:
+            raise InvalidArgumentError('Empty token')
 
     def __str__(self) -> str:
         return f'Token: {self.token}\n URL: {self.url}'
+        
