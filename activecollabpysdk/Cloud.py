@@ -1,6 +1,6 @@
-from token_sdk import Token
-from authenticator import Authenticator
-from Exceptions import AuthenticationError, EmptyArgumentError, InvalidArgumentError, InvalidResponse
+from activecollabpysdk.token_sdk import Token
+from activecollabpysdk.authenticator import Authenticator
+from activecollabpysdk.Exceptions import AuthenticationError, EmptyArgumentError, InvalidArgumentError, InvalidResponse
 import requests
 
 class Cloud(Authenticator):
@@ -69,6 +69,7 @@ class Cloud(Authenticator):
         :rtype: Token
         """
 
+        # Check if we have loaded a valid account ID
         if not account_ID:
             raise EmptyArgumentError("Need to provide an account ID (int)")
 
@@ -82,6 +83,7 @@ class Cloud(Authenticator):
         app_name = self.app_name
         intent = self.intent
 
+        # Build the request
         try:
             r = requests.post(url, data={'client_vendor': email, 'client_name': app_name, 'intent': intent})
             r.raise_for_status() 
@@ -89,6 +91,7 @@ class Cloud(Authenticator):
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
 
+        # Check for a valid response
         if not r.json() and 'application/json' not in r.headers['content-type']:
             raise AuthenticationError("Invalid response")
         return self.issueTokenResponseToToken(r, self.accounts[account_ID]['url'])
@@ -101,60 +104,66 @@ class Cloud(Authenticator):
         :rtype: None
 
         """
-        
+                
+        if self.accounts_and_user_loaded:
+            return
+        #TODO: This is redundant, remove it
         # We have not loaded the accounts yet
-        if not self.accounts_and_user_loaded:
-            email = self.email_address
-            password = self.password
-            
-            if not email or not password:
-                raise AuthenticationError("Password {password} and email {email} are not valid")
+        # email = self.email_address
+        # password = self.password
 
-            url = 'https://my.activecollab.com/api/v1/external/login'
-            data = {
-                'email': email,
-                'password': password
-            }
-            headers = {
-                'Content-type': 'application/json',
-                'Accept': 'text/plain'
-            }
+        if not self.email_address or not self.password:
+            raise AuthenticationError("Password {password} and email {email} are not valid")
 
-            # Try post to retrieve an intent and account info
-            try:
-                r = requests.post(url, json=data, headers=headers)
-                r.raise_for_status()  
-            except requests.exceptions.RequestException as e:
-                raise SystemExit(e)
-            
-            # Request JSON received
-            if r.json() and r.headers['content-type'] == 'application/json':
-                response = r.json()
+        # Build the request
+        url = 'https://my.activecollab.com/api/v1/external/login'
+        data = {
+            'email': self.email_address,
+            'password': self.password
+        }
+        headers = {
+            'Content-type': 'application/json',
+            'Accept': 'text/plain'
+        }
 
-                # Response Failed
-                if not response['is_ok']:
-                    # No reason for failure
-                    if not response['message']:
-                        raise AuthenticationError('No response received')
-                    # Resons for failure provided
-                    else:
-                        raise AuthenticationError(response['message'])
-                # Did not get an intent
-                elif not response['user'] or not response['user']['intent']:
-                    raise AuthenticationError('Failed to generate an intent')
-                # We have JSON and an intent
+        # Try post to retrieve an intent and account info
+        try:
+            r = requests.post(url, json=data, headers=headers)
+            r.raise_for_status()  
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(e)
+
+        # Request JSON received
+        if r.json() and r.headers['content-type'] == 'application/json':
+            response = r.json()
+
+            # Response Failed to authenticate
+            if not response['is_ok']:
+                # No reason for failure
+                if not response['message']:
+                    raise AuthenticationError('No response received')
+                # Resons for failure provided
                 else:
-                    if response['accounts'] or type(response['accounts']) == list:
-                        for account in response['accounts']:
-
-                            if account['class'] == 'FeatherApplicationInstance' or account['class'] == 'ActiveCollab\Shepherd\Model\Account\ActiveCollab\FeatherAccount': 
-                                self.accounts = account
-
-                    # Success, load user values and set account flag to True
-                    self.intent = response['user']['intent']
-                    self.user = {'avatar_url': response['user']['avatar_url'], 'first_name': response['user']['first_name'], 'last_name': response['user']['last_name']}
-                    self.accounts_and_user_loaded = True
+                    raise AuthenticationError(response['message'])
+            
+            # Response failed to generate user intent
+            elif not response['user'] or not response['user']['intent']:
+                raise AuthenticationError('Failed to generate an intent')
             else:
-                content_type = r.headers['content-type']
-                http_code = r.status_code
-                raise AuthenticationError(f'Invalid response. JSON expected, got {content_type}, status code {http_code}')
+                if response['accounts'] or type(response['accounts']) == list:
+                    for account in response['accounts']:
+
+                        if account['class'] in [
+                            'FeatherApplicationInstance',
+                            'ActiveCollab\Shepherd\Model\Account\ActiveCollab\FeatherAccount',
+                        ]: 
+                            self.accounts = account
+
+                # Success, load user values and set account flag to True
+                self.intent = response['user']['intent']
+                self.user = {'avatar_url': response['user']['avatar_url'], 'first_name': response['user']['first_name'], 'last_name': response['user']['last_name']}
+                self.accounts_and_user_loaded = True
+        else:
+            content_type = r.headers['content-type']
+            http_code = r.status_code
+            raise AuthenticationError(f'Invalid response. JSON expected, got {content_type}, status code {http_code}')

@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from requests.models import Response
-from token_sdk import Token
+from activecollabpysdk.token_sdk import Token
 
 class AuthenticatorInterface(metaclass=ABCMeta):
     """Base class for Authentication"""
