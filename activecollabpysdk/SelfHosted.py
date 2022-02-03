@@ -1,6 +1,6 @@
 from typing import Any
 from authenticator import Authenticator
-import validators
+from urllib.parse import urlparse
 from Exceptions import AuthenticationError, InvalidArgumentError
 import requests
 
@@ -10,7 +10,9 @@ class SelfHosted(Authenticator):
     def __init__(self, your_org_name: str, your_app_name: str, email_address: str, password: str, self_hosted_url: str, api_version: int) -> None:
         super().__init__(your_org_name, your_app_name, email_address, password)
 
-        if not validators.url(Any(self_hosted_url)):
+        result = urlparse(self_hosted_url)
+
+        if not all([result.scheme, result.netloc]):
             raise InvalidArgumentError(f'Self hoste URL {self_hosted_url} is not valid')
         self.self_hosted_url = self_hosted_url
 
