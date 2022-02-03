@@ -2,12 +2,12 @@ from io import BufferedReader
 from typing import Any
 
 from requests.models import Response
-from Exceptions import InvalidArgumentError
-from token_sdk import Token
+from activecollabpysdk.Exceptions import InvalidArgumentError
+from activecollabpysdk.token_sdk import Token
 from urllib import parse
 import requests
 import os
-from client_interface import ClientInterface
+from activecollabpysdk.client_interface import ClientInterface
 
 class Client(ClientInterface):
     """Client connection class for connecting to ActiveCollab API"""
