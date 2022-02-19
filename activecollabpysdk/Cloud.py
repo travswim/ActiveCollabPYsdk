@@ -89,7 +89,7 @@ class Cloud(Authenticator):
             r.raise_for_status() 
 
         except requests.exceptions.RequestException as e:
-            raise SystemExit(e)
+            raise SystemExit(e) from e
 
         # Check for a valid response
         if not r.json() and 'application/json' not in r.headers['content-type']:
@@ -131,7 +131,7 @@ class Cloud(Authenticator):
             r = requests.post(url, json=data, headers=headers)
             r.raise_for_status()  
         except requests.exceptions.RequestException as e:
-            raise SystemExit(e)
+            raise SystemExit(e) from e
 
         # Request JSON received
         if r.json() and r.headers['content-type'] == 'application/json':
