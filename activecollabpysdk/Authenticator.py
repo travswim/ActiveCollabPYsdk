@@ -1,8 +1,7 @@
 from requests.models import Response
-from activecollabpysdk.Exceptions import AuthenticationError
-# import validators
 from email.utils import parseaddr
 
+from activecollabpysdk.Exceptions import AuthenticationError
 from activecollabpysdk.authenticator_interface import AuthenticatorInterface
 from activecollabpysdk.token_sdk import Token
 
@@ -31,6 +30,7 @@ class Authenticator(AuthenticatorInterface):
 
         """
         result = response.json()
+        print(response.content)
         if not result['is_ok'] or not result['token']:
             raise AuthenticationError('Authentication rejected')
 

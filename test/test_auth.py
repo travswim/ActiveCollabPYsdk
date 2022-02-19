@@ -1,58 +1,56 @@
-import configparser
-import unittest
-
+from json import JSONDecodeError
+from typing import Literal
+from requests.models import Response
 from activecollabpysdk.Exceptions import AuthenticationError, EmptyArgumentError
-from activecollabpysdk.cloud import Cloud
-from activecollabpysdk.token_sdk import Token
-from activecollabpysdk.client import Client
+from activecollabpysdk.authenticator import Authenticator
 
+import unittest
+from email.utils import parseaddr
 
-class Test_Login(unittest.TestCase):
+class Test_Authenticator(unittest.TestCase):
+    """
+    Test Authentication class methods
 
-    
+    NOTE: We only need to test the response conent, not the url (url is tested in token_sdk)
+    """
     def setUp(self) -> None:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        if not config.sections():
-            raise EmptyArgumentError('No sections in config file')
-
-        self.my_email = config['LOGIN']['ACemail']
-        self.ac_url = config['LOGIN']['ACurl']
-        self.my_password = config['LOGIN']['ACpassword']
-        self.my_account_id = config['LOGIN']['ACaccountid']
-        self.my_url = config['LOGIN']['ACbaseurl'] + str(self.my_account_id)
+        self.org_name: str = 'my_org'
+        self.app_name: str = 'my_app'
+        valid_email = parseaddr('abc@abc.com')
+        if valid_email[0] == valid_email[1] == '':
+            raise ValueError('Not a valid email address')
+        self.email_address: str = 'abc@abc.com'         
+        self.password: str = 'abc123'
     
-    def test_auth_success(self) -> None:
+    def test_issuetoken_pass(self) -> None:
+        auth = self._generate_auth(
+            "https://www.something.com", b'{"is_ok":true,"token":"abc"}'
+        )
 
-        # Check parameters passed are accurate
-        if not self.my_account_id:
-            raise ValueError("Empty account ID")
-        if not self.my_email or not self.my_password:
-            raise AttributeError('Password and email are empty')
+        auth.issueTokenResponseToToken(self.response, self.url)
 
-        my_organization = 'My Organization Inc'
-        my_app = 'My Dummy App'
+    def test_issuetoken_fail_is_ok(self) -> None:
+        auth = self._generate_auth(
+            "https://www.something.com", b'{"is_ok":false,"token":"abc"}'
+        )
 
-        my_cloud = Cloud(my_organization, my_app, self.my_email, self.my_password)
-        # Convert account_id to int
-        my_account_id = int(self.my_account_id)
+        with self.assertRaises(AuthenticationError):
+            auth.issueTokenResponseToToken(self.response, self.url)
 
-        # Test Authentication
-        self.assertTrue(my_cloud.accounts, "Accounts is empty")
-        self.assertTrue(my_account_id in my_cloud.accounts, "Account ID not found")
-        self.assertEqual(my_cloud.accounts[my_account_id]['url'], self.my_url, 'Wrong URL returned')
-        self.assertEqual(my_cloud.accounts[my_account_id]['class'], 'FeatherApplicationInstance', 'Wrong application type returned')
+    def test_issuetoken_fail_message(self) -> None:
+        auth = self._generate_auth(
+            "https://www.something.com", b''
+        )
 
-        # Testing issuing a token
-        my_token = my_cloud.issue_token(my_account_id)
-        self.assertTrue(type(my_token) == Token)
-        # Enable requests from ActiveCollab
-        client = Client(my_token)
+        with self.assertRaises(JSONDecodeError):
+            auth.issueTokenResponseToToken(self.response, self.url)
 
-        # Test we can request from ActiveCollab
-        response = client.get('info')
-        self.assertEqual(response.json()['application'], 'ActiveCollab')
-        self.assertIsNotNone(response.json()['version'] >= '7.2.66')
-            
-if __name__ == '__main__':
-    unittest.main()
+
+    def _generate_auth(self, url: str, response_content: bytes):
+        self.url = url
+        self.response = Response()
+        self.response.status_code = 200
+        self.response._content = response_content
+        return Authenticator(
+            self.org_name, self.app_name, self.email_address, self.password
+        )
