@@ -11,7 +11,7 @@ from activecollabpysdk.client_interface import ClientInterface
 
 class Client(ClientInterface):
     """Client connection class for connecting to ActiveCollab API"""
-
+    #TODO: Figure out a way to store the token for future use in a config file
     def __init__(self, token: Token, api_version: int = None) -> None:
         self.token = token
 
@@ -42,11 +42,16 @@ class Client(ClientInterface):
             
         path = parse_url.path or '/'
         
-        path = '/' + path if path[0] != '/' else path
+        # path = '/' + path if path[0] != '/' else path
+        path = f'/{path}' if path[0] != '/' else path
+        
 
-        query = '/' + parse_url.query if parse_url.query else ''
+        # query = '/' + parse_url.query if parse_url.query else ''
+        query = f'/{parse_url.query}' if parse_url.query else ''
 
-        return self.token.url + '/api/v' + str(self.api_version) + path + query
+        # return self.token.url + '/api/v' + str(self.api_version) + path + query
+        return f'{self.token.url}/api/v' + str(self.api_version) + path + query
+
 
     # def __prepare_params(self, params: dict[str, Any]) -> dict[str, Any]:
     #     """Prepare given dictionary {parameters} to post to ActiveCollab
@@ -56,7 +61,7 @@ class Client(ClientInterface):
     #     """
     #     return params or {}
 
-    def __prepare_files(self, attachments: list[str]) -> dict[str, BufferedReader]:
+    def __prepare_files(self, attachments: list[str] | None) -> dict[str, BufferedReader]:
         """Converts a list of file paths to file objects.
 
         Converts a list of file paths to file objects. Used by post() method to post files to ActiveCollab
@@ -65,7 +70,8 @@ class Client(ClientInterface):
         :return: dictionary of filenames (key) and file objects (value).
         :rtype: dict[str, BufferedReader]
         """
-
+        if attachments is None:
+            raise InvalidArgumentError("No attachments provided")
         file_params = {}
 
         if attachments:
@@ -114,11 +120,11 @@ class Client(ClientInterface):
             r = requests.get(url=self.__prepare_url(url), headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
-            raise SystemExit(e)
+            raise SystemExit(e) from e
 
         return r
 
-    def post(self, url: str, params: dict = {}, attachments: list[str] = []) -> None:
+    def post(self, url: str, params: dict = None, attachments: list[str] = None) -> None:
         """HTTP Post request to ActiveCollab (Create New)
 
             Makes a post request to ActiveCollab using the provided URL, parameters/data, and attachments (optional)
@@ -136,9 +142,9 @@ class Client(ClientInterface):
             r = requests.post(url=self.__prepare_url(url), json=params, headers=self.header, files=self.__prepare_files(attachments))
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
-                raise SystemExit(e)
+            raise SystemExit(e) from e
 
-    def put(self, url: str, params: dict = {}) -> None:
+    def put(self, url: str, params: dict = None) -> None:
         """HTTP Put request from ActiveCollab (Insert/Replace)
 
             Makes a get request to active collab using the provided URL
@@ -154,9 +160,9 @@ class Client(ClientInterface):
             r = requests.post(url=self.__prepare_url(url), json=params, headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
-                raise SystemExit(e)
+                raise SystemExit(e) from e
 
-    def delete(self, url:str, params: dict = {}) -> None:
+    def delete(self, url:str, params: dict = None) -> None:
         """HTTP Delete request from ActiveCollab
 
             Makes a delete request to ActiveCollab using the provided URL and parameters
@@ -171,4 +177,4 @@ class Client(ClientInterface):
             r = requests.delete(url = self.__prepare_url(url), headers=self.header, json=params)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
-                raise SystemExit(e)
+                raise SystemExit(e) from e
