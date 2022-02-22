@@ -54,3 +54,6 @@ class Test_Authenticator(unittest.TestCase):
         return Authenticator(
             self.org_name, self.app_name, self.email_address, self.password
         )
+
+if __name__ == '__main__':
+    unittest.main()
