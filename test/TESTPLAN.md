@@ -1,0 +1,11 @@
+- [ ] Integration Test:
+- [ ] Unit Test:
+    - [x] authenticator
+    - [ ] client
+    - [ ] cloud
+    - [ ] self-hosted
+    - [x] token_sdk
+- [ ] Functional Test:
+    - [ ] Login/Authenticate
+    - [ ] Retrieve from activecollab
+    - [ ] Post to activecollab
