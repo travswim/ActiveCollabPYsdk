@@ -11,8 +11,8 @@ from activecollabpysdk.client_interface import ClientInterface
 
 class Client(ClientInterface):
     """Client connection class for connecting to ActiveCollab API"""
-    #TODO: Figure out a way to store the token for future use in a config file
-    def __init__(self, token: Token, api_version: int = None) -> None:
+    
+    def __init__(self, token: Token, api_version: int|None) -> None:
         self.token = token
 
         if api_version is None:
@@ -39,18 +39,18 @@ class Client(ClientInterface):
             raise InvalidArgumentError(f'{url} is invalid')
 
         parse_url = parse.urlsplit(url)
-            
+
         path = parse_url.path or '/'
-        
+
         # path = '/' + path if path[0] != '/' else path
         path = f'/{path}' if path[0] != '/' else path
-        
+
 
         # query = '/' + parse_url.query if parse_url.query else ''
         query = f'/{parse_url.query}' if parse_url.query else ''
 
         # return self.token.url + '/api/v' + str(self.api_version) + path + query
-        return f'{self.token.url}/api/v' + str(self.api_version) + path + query
+        return f'{self.token.url}/api/v{str(self.api_version)}{path}{query}'
 
 
     # def __prepare_params(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -84,7 +84,7 @@ class Client(ClientInterface):
                     raise FileNotFoundError(f'{path} not found')
 
                 with open(path, 'rb') as file:
-                    file_params['attachment_' + str(counter)] = file
+                    file_params[f'attachment_{counter}'] = file
                     counter +=1
 
         return file_params
@@ -124,7 +124,7 @@ class Client(ClientInterface):
 
         return r
 
-    def post(self, url: str, params: dict = None, attachments: list[str] = None) -> None:
+    def post(self, url: str, params: dict, attachments: list[str]) -> None:
         """HTTP Post request to ActiveCollab (Create New)
 
             Makes a post request to ActiveCollab using the provided URL, parameters/data, and attachments (optional)
@@ -144,7 +144,7 @@ class Client(ClientInterface):
         except requests.exceptions.RequestException as e:
             raise SystemExit(e) from e
 
-    def put(self, url: str, params: dict = None) -> None:
+    def put(self, url: str, params: dict) -> None:
         """HTTP Put request from ActiveCollab (Insert/Replace)
 
             Makes a get request to active collab using the provided URL
@@ -162,7 +162,7 @@ class Client(ClientInterface):
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e) from e
 
-    def delete(self, url:str, params: dict = None) -> None:
+    def delete(self, url:str, params: dict) -> None:
         """HTTP Delete request from ActiveCollab
 
             Makes a delete request to ActiveCollab using the provided URL and parameters
