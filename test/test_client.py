@@ -4,7 +4,6 @@ import configparser
 
 from activecollabpysdk.Exceptions import EmptyArgumentError
 from activecollabpysdk.token_sdk import Token
-
 from activecollabpysdk.client import Client
 
 
@@ -30,7 +29,7 @@ class Test_Client(unittest.TestCase):
 
     def test_prepare_url(self):
         t = Token('abc', 'https://www.something.com')
-        c = Client(t)
+        c = Client(t, 1)
         c.__prepare_url('info')
     
 
