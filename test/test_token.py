@@ -19,7 +19,7 @@ class Test_Token(unittest.TestCase):
 
         try:
             token = Token(my_token, my_url)
-            self.assertTrue(True)
+            self.assertIsInstance(token, Token, "Token object not created")
         except InvalidArgumentError as e:
             self.fail(f'Unexpected argument failure: {e}')
         
