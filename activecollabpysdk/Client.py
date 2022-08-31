@@ -12,21 +12,18 @@ from activecollabpysdk.client_interface import ClientInterface
 class Client(ClientInterface):
     """Client connection class for connecting to ActiveCollab API"""
     
-    def __init__(self, token: Token, api_version: int|None) -> None:
+    def __init__(self, token: Token, api_version: int = 1) -> None:
         self.token = token
 
-        if api_version is None:
-            self.api_version = 1
-        elif api_version < 0:
+        if api_version < 0:
             raise InvalidArgumentError(f'{api_version} is not a valid API version')
-        else:
-            self.api_version = api_version
+        self.api_version = api_version
         self.header = {"X-Angie-AuthApiToken" : self.token.token}
         self.info_response: Any = False
     
     
 
-    def __prepare_url(self, url: str) -> str:
+    def _prepare_url(self, url: str) -> str:
         """Prepares a given URL for making http requests
 
         Formats a url and checks if it is valid. Used by post, get, put, and delete requests to ActiveCollab
@@ -61,7 +58,7 @@ class Client(ClientInterface):
     #     """
     #     return params or {}
 
-    def __prepare_files(self, attachments: list[str] | None) -> dict[str, BufferedReader]:
+    def _prepare_files(self, attachments: list[str] | None) -> dict[str, BufferedReader]:
         """Converts a list of file paths to file objects.
 
         Converts a list of file paths to file objects. Used by post() method to post files to ActiveCollab
@@ -117,7 +114,7 @@ class Client(ClientInterface):
         
         """
         try:
-            r = requests.get(url=self.__prepare_url(url), headers=self.header)
+            r = requests.get(url=self._prepare_url(url), headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise SystemExit(e) from e
@@ -139,7 +136,7 @@ class Client(ClientInterface):
         """
         try:
 
-            r = requests.post(url=self.__prepare_url(url), json=params, headers=self.header, files=self.__prepare_files(attachments))
+            r = requests.post(url=self._prepare_url(url), json=params, headers=self.header, files=self._prepare_files(attachments))
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise SystemExit(e) from e
@@ -157,7 +154,7 @@ class Client(ClientInterface):
         """
         try:
 
-            r = requests.post(url=self.__prepare_url(url), json=params, headers=self.header)
+            r = requests.put(url=self._prepare_url(url), json=params, headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e) from e
@@ -174,7 +171,7 @@ class Client(ClientInterface):
             :rtype: None
         """
         try:
-            r = requests.delete(url = self.__prepare_url(url), headers=self.header, json=params)
+            r = requests.delete(url = self._prepare_url(url), headers=self.header, json=params)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e) from e
