@@ -121,7 +121,7 @@ class Client(ClientInterface):
 
         return r
 
-    def post(self, url: str, params: dict, attachments: list[str]) -> None:
+    def post(self, url: str, params: dict, attachments: list[str] = []) -> None:
         """HTTP Post request to ActiveCollab (Create New)
 
             Makes a post request to ActiveCollab using the provided URL, parameters/data, and attachments (optional)
