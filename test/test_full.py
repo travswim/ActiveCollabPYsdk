@@ -55,6 +55,72 @@ class Test_Login(unittest.TestCase):
         self.assertEqual(response.json()['application'], 'ActiveCollab')
         self.assertIsNotNone(response.json()['version'] >= '7.2.66')
 
+    def test_post(self) -> None:
+        # Check parameters passed are accurate
+        if not self.my_account_id:
+            raise ValueError("Empty account ID")
+        if not self.my_email or not self.my_password:
+            raise AttributeError('Password and email are empty')
+
+        my_cloud = Cloud(self.my_organization, self.my_app, self.my_email, self.my_password)
+        # Convert account_id to int
+        my_account_id = int(self.my_account_id)
+
+        # Test Authentication
+        # Testing issuing a token
+        my_token = my_cloud.issue_token(my_account_id)
+
+        # Enable requests from ActiveCollab
+        client = Client(my_token)
+
+        # Test we can request from ActiveCollab
+        response = client.post('projects/5/tasks', params={'name': 'Test Post', 'assignee_id': 48})
+        # self.assertTrue(response.status_code == 201)
+
+    def test_put(self) -> None:
+        # Check parameters passed are accurate
+        if not self.my_account_id:
+            raise ValueError("Empty account ID")
+        if not self.my_email or not self.my_password:
+            raise AttributeError('Password and email are empty')
+
+        my_cloud = Cloud(self.my_organization, self.my_app, self.my_email, self.my_password)
+        # Convert account_id to int
+        my_account_id = int(self.my_account_id)
+
+        # Test Authentication
+        # Testing issuing a token
+        my_token = my_cloud.issue_token(my_account_id)
+
+        # Enable requests from ActiveCollab
+        client = Client(my_token)
+
+        # Test we can request from ActiveCollab
+        response = client.put('projects/5/tasks/40', params={'name': 'Test Put'})
+        # self.assertTrue(response.status_code == 201)
+    
+    def test_delete(self) -> None:
+        # Check parameters passed are accurate
+        if not self.my_account_id:
+            raise ValueError("Empty account ID")
+        if not self.my_email or not self.my_password:
+            raise AttributeError('Password and email are empty')
+
+        my_cloud = Cloud(self.my_organization, self.my_app, self.my_email, self.my_password)
+        # Convert account_id to int
+        my_account_id = int(self.my_account_id)
+
+        # Test Authentication
+        # Testing issuing a token
+        my_token = my_cloud.issue_token(my_account_id)
+
+        # Enable requests from ActiveCollab
+        client = Client(my_token)
+
+        # Test we can request from ActiveCollab
+        response = client.delete('projects/5/tasks/40')
+        # self.assertTrue(response.status_code == 201)
+        
 
 if __name__ == '__main__':
     unittest.main()
