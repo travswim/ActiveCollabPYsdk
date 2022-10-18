@@ -159,7 +159,7 @@ class Client(ClientInterface):
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e) from e
 
-    def delete(self, url:str, params: dict) -> None:
+    def delete(self, url:str) -> None:
         """HTTP Delete request from ActiveCollab
 
             Makes a delete request to ActiveCollab using the provided URL and parameters
@@ -171,7 +171,7 @@ class Client(ClientInterface):
             :rtype: None
         """
         try:
-            r = requests.delete(url = self._prepare_url(url), headers=self.header, json=params)
+            r = requests.delete(url = self._prepare_url(url), headers=self.header)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
                 raise SystemExit(e) from e
