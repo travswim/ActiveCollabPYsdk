@@ -106,14 +106,12 @@ class Test_Client(unittest.TestCase):
         c = self._test_prepare_client()
 
         url = 'https://www.something.com/'
-        data = {'a': 1, 'b': 2}
-
-        actual = c.delete(url, data)
+    
+        actual = c.delete(url)
         # self.assertEqual(actual, 'mock response')
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/',
-            headers={'X-Angie-AuthApiToken': 'abc'},
-            json = data
+            headers={'X-Angie-AuthApiToken': 'abc'}
         )
     
     @patch('activecollabpysdk.client.requests.post')
@@ -157,15 +155,13 @@ class Test_Client(unittest.TestCase):
         c = self._test_prepare_client()
 
         url = 'https://www.something.com/'
-        data = {'a': 1, 'b': 2}
         
         with self.assertRaises(SystemExit):
-            c.delete(url, data)
+            c.delete(url)
 
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/',
-            headers={'X-Angie-AuthApiToken': 'abc'},
-            json = data
+            headers={'X-Angie-AuthApiToken': 'abc'}
         )
 
     def _test_prepare_client(self):
