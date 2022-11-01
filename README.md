@@ -18,3 +18,10 @@
 -[ ] Client
 -[ ] Cloud
 -[ ] Token
+
+
+### Test Commands:
+Python unittest command (from root directory):<br>
+`python -m unittest discover -s .\test\ -p "test_*.py" -v`<br>
+Coverage command:<br>
+`coverage run -m unittest discover -s .\test\ -p "test_*.py" -v`
