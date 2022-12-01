@@ -7,9 +7,9 @@ from activecollabpysdk.token_sdk import Token
 from activecollabpysdk.client import Client
 
 
+@unittest.skip("Don't need to run this in production. Only run this in dev")
 class Test_Login(unittest.TestCase):
 
-    
     def setUp(self) -> None:
         config = configparser.ConfigParser()
         config.read('config.ini')
@@ -23,7 +23,7 @@ class Test_Login(unittest.TestCase):
         self.my_url = config['LOGIN']['ACbaseurl'] + str(self.my_account_id)
         self.my_organization = 'My Organization Inc'
         self.my_app = 'My Dummy App'
-    
+
     def test_auth_success(self) -> None:
 
         # Check parameters passed are accurate
@@ -32,17 +32,30 @@ class Test_Login(unittest.TestCase):
         if not self.my_email or not self.my_password:
             raise AttributeError('Password and email are empty')
 
-        
-
-        my_cloud = Cloud(self.my_organization, self.my_app, self.my_email, self.my_password)
+        my_cloud = Cloud(
+            self.my_organization,
+            self.my_app,
+            self.my_email,
+            self.my_password
+            )
         # Convert account_id to int
         my_account_id = int(self.my_account_id)
 
         # Test Authentication
         self.assertTrue(my_cloud.accounts, "Accounts is empty")
-        self.assertTrue(my_account_id in my_cloud.accounts, "Account ID not found")
-        self.assertEqual(my_cloud.accounts[my_account_id]['url'], self.my_url, 'Wrong URL returned')
-        self.assertEqual(my_cloud.accounts[my_account_id]['class'], 'FeatherApplicationInstance', 'Wrong application type returned')
+        self.assertTrue(
+            my_account_id in my_cloud.accounts,
+            "Account ID not found"
+            )
+        self.assertEqual(
+            my_cloud.accounts[my_account_id]['url'], self.my_url,
+            'Wrong URL returned'
+            )
+        self.assertEqual(
+            my_cloud.accounts[my_account_id]['class'],
+            'FeatherApplicationInstance',
+            'Wrong application type returned'
+            )
 
         # Testing issuing a token
         my_token = my_cloud.issue_token(my_account_id)
@@ -62,7 +75,12 @@ class Test_Login(unittest.TestCase):
         if not self.my_email or not self.my_password:
             raise AttributeError('Password and email are empty')
 
-        my_cloud = Cloud(self.my_organization, self.my_app, self.my_email, self.my_password)
+        my_cloud = Cloud(
+            self.my_organization,
+            self.my_app,
+            self.my_email,
+            self.my_password
+            )
         # Convert account_id to int
         my_account_id = int(self.my_account_id)
 
@@ -74,7 +92,13 @@ class Test_Login(unittest.TestCase):
         client = Client(my_token)
 
         # Test we can request from ActiveCollab
-        response = client.post('projects/5/tasks', params={'name': 'Test Post', 'assignee_id': 48})
+        _ = client.post(
+            'projects/5/tasks',
+            params={
+                'name': 'Test Post',
+                'assignee_id': 48
+                }
+            )
         # self.assertTrue(response.status_code == 201)
 
     def test_put(self) -> None:
@@ -84,7 +108,12 @@ class Test_Login(unittest.TestCase):
         if not self.my_email or not self.my_password:
             raise AttributeError('Password and email are empty')
 
-        my_cloud = Cloud(self.my_organization, self.my_app, self.my_email, self.my_password)
+        my_cloud = Cloud(
+            self.my_organization,
+            self.my_app,
+            self.my_email,
+            self.my_password
+            )
         # Convert account_id to int
         my_account_id = int(self.my_account_id)
 
@@ -96,9 +125,9 @@ class Test_Login(unittest.TestCase):
         client = Client(my_token)
 
         # Test we can request from ActiveCollab
-        response = client.put('projects/5/tasks/40', params={'name': 'Test Put'})
+        _ = client.put('projects/5/tasks/40', params={'name': 'Test Put'})
         # self.assertTrue(response.status_code == 201)
-    
+
     def test_delete(self) -> None:
         # Check parameters passed are accurate
         if not self.my_account_id:
@@ -106,7 +135,12 @@ class Test_Login(unittest.TestCase):
         if not self.my_email or not self.my_password:
             raise AttributeError('Password and email are empty')
 
-        my_cloud = Cloud(self.my_organization, self.my_app, self.my_email, self.my_password)
+        my_cloud = Cloud(
+            self.my_organization,
+            self.my_app,
+            self.my_email,
+            self.my_password
+            )
         # Convert account_id to int
         my_account_id = int(self.my_account_id)
 
@@ -118,9 +152,9 @@ class Test_Login(unittest.TestCase):
         client = Client(my_token)
 
         # Test we can request from ActiveCollab
-        response = client.delete('projects/5/tasks/40')
+        _ = client.delete('projects/5/tasks/40')
         # self.assertTrue(response.status_code == 201)
-        
+
 
 if __name__ == '__main__':
     unittest.main()

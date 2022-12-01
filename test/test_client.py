@@ -1,4 +1,3 @@
-import json
 from io import BufferedReader
 import unittest
 from unittest.mock import patch, Mock
@@ -7,7 +6,8 @@ import configparser
 # from mock import patch
 from requests.exceptions import HTTPError
 
-from activecollabpysdk.Exceptions import EmptyArgumentError, InvalidArgumentError
+from activecollabpysdk.Exceptions import EmptyArgumentError, \
+    InvalidArgumentError
 from activecollabpysdk.token_sdk import Token
 from activecollabpysdk.client import Client
 
@@ -49,7 +49,7 @@ class Test_Client(unittest.TestCase):
         c = self._test_prepare_client()
         file_path = 'abc.txt'
         with self.assertRaises(FileNotFoundError):
-            c._prepare_files([file_path])        
+            c._prepare_files([file_path])
 
     # Info & get
     @patch('activecollabpysdk.client.requests.get')
@@ -62,7 +62,7 @@ class Test_Client(unittest.TestCase):
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/info',
             headers={'X-Angie-AuthApiToken': 'abc'}
-        )  
+        )
 
     @patch('activecollabpysdk.client.requests.post')
     def test_post(self, mock_info):
@@ -73,15 +73,15 @@ class Test_Client(unittest.TestCase):
         url = 'https://www.something.com/'
         data = {'a': 1, 'b': 2}
 
-        actual = c.post(url, data)
+        _ = c.post(url, data)
 
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/',
             headers={'X-Angie-AuthApiToken': 'abc'},
-            files = {},
-            json = data
+            files={},
+            json=data
         )
-    
+
     @patch('activecollabpysdk.client.requests.put')
     def test_put(self, mock_info):
         mock_info.return_value.status_code = 201
@@ -91,14 +91,14 @@ class Test_Client(unittest.TestCase):
         url = 'https://www.something.com/'
         data = {'a': 1, 'b': 2}
 
-        actual = c.put(url, data)
+        _ = c.put(url, data)
         # self.assertEqual(actual, 'mock response')
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/',
             headers={'X-Angie-AuthApiToken': 'abc'},
-            json = data
+            json=data
         )
-    
+
     @patch('activecollabpysdk.client.requests.delete')
     def test_delete(self, mock_info):
         mock_info.return_value.status_code = 201
@@ -106,56 +106,59 @@ class Test_Client(unittest.TestCase):
         c = self._test_prepare_client()
 
         url = 'https://www.something.com/'
-    
-        actual = c.delete(url)
+
+        _ = c.delete(url)
         # self.assertEqual(actual, 'mock response')
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/',
             headers={'X-Angie-AuthApiToken': 'abc'}
         )
-    
+
     @patch('activecollabpysdk.client.requests.post')
     def test_post_fail(self, mock_info):
-        mock_info.side_effect = HTTPError(Mock(return_value={'status_code': 500}), 'error')
+        mock_info.side_effect = HTTPError(
+            Mock(return_value={'status_code': 500}), 'error')
         c = self._test_prepare_client()
 
         url = 'https://www.something.com/'
         data = {'a': 1, 'b': 2}
-        
+
         with self.assertRaises(SystemExit):
             c.post(url, data)
 
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/',
             headers={'X-Angie-AuthApiToken': 'abc'},
-            json = data,
-            files= {}
+            json=data,
+            files={}
         )
 
     @patch('activecollabpysdk.client.requests.put')
     def test_put_fail(self, mock_info):
-        mock_info.side_effect = HTTPError(Mock(return_value={'status_code': 500}), 'error')
+        mock_info.side_effect = HTTPError(
+            Mock(return_value={'status_code': 500}), 'error')
         c = self._test_prepare_client()
 
         url = 'https://www.something.com/'
         data = {'a': 1, 'b': 2}
-        
+
         with self.assertRaises(SystemExit):
             c.put(url, data)
 
         mock_info.assert_called_once_with(
             url='https://www.something.com/api/v1/',
             headers={'X-Angie-AuthApiToken': 'abc'},
-            json = data
+            json=data
         )
 
     @patch('activecollabpysdk.client.requests.delete')
     def test_delete_fail(self, mock_info):
-        mock_info.side_effect = HTTPError(Mock(return_value={'status_code': 500}), 'error')
+        mock_info.side_effect = HTTPError(
+            Mock(return_value={'status_code': 500}), 'error')
         c = self._test_prepare_client()
 
         url = 'https://www.something.com/'
-        
+
         with self.assertRaises(SystemExit):
             c.delete(url)
 
@@ -171,7 +174,6 @@ class Test_Client(unittest.TestCase):
         t = Token('abc', 'https://www.something.com')
         return Client(t, 1)
 
-    
 
 if __name__ == '__main__':
     unittest.main()
