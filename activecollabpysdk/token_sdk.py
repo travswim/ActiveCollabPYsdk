@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 from activecollabpysdk.Exceptions import InvalidArgumentError
-from dataclasses import dataclass  
+from dataclasses import dataclass
+
 
 @dataclass
 class Token:
@@ -22,4 +23,3 @@ class Token:
 
     def __str__(self) -> str:
         return f'Token: {self.token}\n URL: {self.url}'
-        
