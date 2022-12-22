@@ -6,10 +6,10 @@ import configparser
 # from mock import patch
 from requests.exceptions import HTTPError
 
-from activecollabpysdk.Exceptions import EmptyArgumentError, \
+from Exceptions import EmptyArgumentError, \
     InvalidArgumentError
-from activecollabpysdk.token_sdk import Token
-from activecollabpysdk.client import Client
+from token_sdk import Token
+from client import Client
 
 
 class Test_Client(unittest.TestCase):
