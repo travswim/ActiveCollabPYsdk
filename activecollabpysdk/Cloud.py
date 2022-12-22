@@ -1,18 +1,25 @@
 from activecollabpysdk.token_sdk import Token
-from activecollabpysdk.authenticator import Authenticator
-from activecollabpysdk.Exceptions import AuthenticationError, EmptyArgumentError, InvalidArgumentError, InvalidResponse
+from activecollabpysdk.Authenticator import Authenticator
+from activecollabpysdk.Exceptions import AuthenticationError,\
+    EmptyArgumentError, InvalidArgumentError
 import requests
+
 
 class Cloud(Authenticator):
     """Cloud authentication interface for ActiveCollab"""
 
-    def __init__(self, your_org_name: str, your_app_name: str, email_address: str, password: str) -> None:
+    def __init__(
+        self, your_org_name:
+        str, your_app_name: str,
+        email_address: str,
+        password: str
+    ) -> None:
         super().__init__(your_org_name, your_app_name, email_address, password)
         self.__accounts_and_user_loaded = False
         self.__accounts = {}
         self.__user = {}
         self.__intent = ""
-    
+
     # Getter/setters
     @property
     def accounts_and_user_loaded(self) -> bool:
@@ -52,7 +59,7 @@ class Cloud(Authenticator):
         if not self.__accounts_and_user_loaded:
             self.__load_accounts_and_users()
         return self.__intent
-    
+
     @intent.setter
     def intent(self, value: str) -> None:
         if not value:
@@ -77,16 +84,24 @@ class Cloud(Authenticator):
 
         if account_ID not in self.accounts:
             raise InvalidArgumentError("Account ID is invalid")
-        
-        url = 'https://app.activecollab.com/' + str(account_ID) + '/api/v1/issue-token-intent'
+
+        url = 'https://app.activecollab.com/' + str(account_ID) \
+            + '/api/v1/issue-token-intent'
         email = self.email_address
         app_name = self.app_name
         intent = self.intent
 
         # Build the request
         try:
-            r = requests.post(url, data={'client_vendor': email, 'client_name': app_name, 'intent': intent})
-            r.raise_for_status() 
+            r = requests.post(
+                url,
+                data={
+                    'client_vendor': email,
+                    'client_name': app_name,
+                    'intent': intent
+                }
+            )
+            r.raise_for_status()
 
         except requests.exceptions.RequestException as e:
             raise SystemExit(e) from e
@@ -94,7 +109,10 @@ class Cloud(Authenticator):
         # Check for a valid response
         if not r.json() and 'application/json' not in r.headers['content-type']:
             raise AuthenticationError("Invalid response")
-        return self.issueTokenResponseToToken(r, self.accounts[account_ID]['url'])
+        return self.issueTokenResponseToToken(
+            r,
+            self.accounts[account_ID]['url']
+        )
 
     def __load_accounts_and_users(self) -> None:
         """Loads the account information related to an ActiveCollab user
@@ -104,16 +122,18 @@ class Cloud(Authenticator):
         :rtype: None
 
         """
-                
+
         if self.accounts_and_user_loaded:
             return
-        #TODO: This is redundant, remove it
+        # TODO: This is redundant, remove it
         # We have not loaded the accounts yet
         # email = self.email_address
         # password = self.password
 
         if not self.email_address or not self.password:
-            raise AuthenticationError("Password {password} and email {email} are not valid")
+            raise AuthenticationError(
+                "Password {password} and email {email} are not valid"
+            )
 
         # Build the request
         url = 'https://my.activecollab.com/api/v1/external/login'
@@ -129,7 +149,7 @@ class Cloud(Authenticator):
         # Try post to retrieve an intent and account info
         try:
             r = requests.post(url, json=data, headers=headers)
-            r.raise_for_status()  
+            r.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise SystemExit(e) from e
 
@@ -145,7 +165,7 @@ class Cloud(Authenticator):
                 # Resons for failure provided
                 else:
                     raise AuthenticationError(response['message'])
-            
+
             # Response failed to generate user intent
             elif not response['user'] or not response['user']['intent']:
                 raise AuthenticationError('Failed to generate an intent')
@@ -155,15 +175,23 @@ class Cloud(Authenticator):
 
                         if account['class'] in [
                             'FeatherApplicationInstance',
-                            'ActiveCollab\Shepherd\Model\Account\ActiveCollab\FeatherAccount',
-                        ]: 
+                            'ActiveCollab\\Shepherd\\Model\\Account\\\
+                                ActiveCollab\\FeatherAccount',
+                        ]:
                             self.accounts = account
 
                 # Success, load user values and set account flag to True
                 self.intent = response['user']['intent']
-                self.user = {'avatar_url': response['user']['avatar_url'], 'first_name': response['user']['first_name'], 'last_name': response['user']['last_name']}
+                self.user = {
+                    'avatar_url': response['user']['avatar_url'],
+                    'first_name': response['user']['first_name'],
+                    'last_name': response['user']['last_name']
+                }
                 self.accounts_and_user_loaded = True
         else:
             content_type = r.headers['content-type']
             http_code = r.status_code
-            raise AuthenticationError(f'Invalid response. JSON expected, got {content_type}, status code {http_code}')
+            raise AuthenticationError(
+                f'Invalid response. JSON expected, got {content_type}, \
+                    status code {http_code}'
+                )
