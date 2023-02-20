@@ -1,7 +1,7 @@
 from requests.models import Response
 from email.utils import parseaddr
 
-from activecollabpysdk.Exceptions import AuthenticationError
+from activecollabpysdk.exceptions import AuthenticationError
 from activecollabpysdk.authenticator_interface import AuthenticatorInterface
 from activecollabpysdk.token_sdk import Token
 
