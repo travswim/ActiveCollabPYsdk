@@ -1,197 +1,129 @@
-from activecollabpysdk.token_sdk import Token
-from activecollabpysdk.Authenticator import Authenticator
-from activecollabpysdk.Exceptions import AuthenticationError,\
-    EmptyArgumentError, InvalidArgumentError
-import requests
+from requests import post
+from exceptions import AuthenticationError, InvalidResponse
 
 
-class Cloud(Authenticator):
-    """Cloud authentication interface for ActiveCollab"""
+class Cloud:
+    """
+    A class that handles authentication and interaction with the Active Collab Cloud API.
 
-    def __init__(
-        self, your_org_name:
-        str, your_app_name: str,
-        email_address: str,
-        password: str
-    ) -> None:
-        super().__init__(your_org_name, your_app_name, email_address, password)
-        self.__accounts_and_user_loaded = False
-        self.__accounts = {}
-        self.__user = {}
-        self.__intent = ""
+    Attributes:
+        email_address (str): The email address of the user.
+        password (str): The password of the user.
+        your_org_name (str): The name of your organization.
+        your_app_name (str): The name of your application.
+        accounts (dict): A dictionary of all Feather accounts associated with the user.
+        all_accounts (list): A list of all accounts associated with the user.
+        user (dict): A dictionary of user information.
+        intent (str): The user's intent.
+    """
 
-    # Getter/setters
-    @property
-    def accounts_and_user_loaded(self) -> bool:
-        return self.__accounts_and_user_loaded
-
-    @accounts_and_user_loaded.setter
-    def accounts_and_user_loaded(self, value: bool) -> None:
-        self.__accounts_and_user_loaded = value
-
-    @property
-    def accounts(self) -> dict:
-        if not self.__accounts_and_user_loaded:
-            self.__load_accounts_and_users()
-        return self.__accounts
-
-    @accounts.setter
-    def accounts(self, value) -> None:
-        if not value:
-            raise InvalidArgumentError("Cannot be an empty value")
-        self.__accounts[value['name']] = value
-
-    @property
-    def user(self) -> dict[str, str]:
-        if not self.__accounts_and_user_loaded:
-            self.__load_accounts_and_users()
-
-        return self.__user
-
-    @user.setter
-    def user(self, value: dict[str, str]) -> None:
-        if not value:
-            raise InvalidArgumentError('Cannot be empty value')
-        self.__user = value
-
-    @property
-    def intent(self) -> str:
-        if not self.__accounts_and_user_loaded:
-            self.__load_accounts_and_users()
-        return self.__intent
-
-    @intent.setter
-    def intent(self, value: str) -> None:
-        if not value:
-            raise InvalidArgumentError('Cannot be empty value')
-        self.__intent = value
-
-    def issue_token(self, account_ID: int) -> Token:
-        """Issues a token for a cloud hosted ActiveCollab account
-
-        :param int account_ID: An account ID associated with the user account
-        :raise: SystemExit() on request, connection, or HTTP failure
-        :raise: AuthenticationError() on an invalid json response
-        :return: A Token object
-        :rtype: Token
+    def __init__(self, email_address, password, your_org_name, your_app_name):
         """
+        Initializes a new instance of the Cloud class.
 
-        # Check if we have loaded a valid account ID
-        if not account_ID:
-            raise EmptyArgumentError("Need to provide an account ID (int)")
-
-        intent = self.intent
-
-        if account_ID not in self.accounts:
-            raise InvalidArgumentError("Account ID is invalid")
-
-        url = 'https://app.activecollab.com/' + str(account_ID) \
-            + '/api/v1/issue-token-intent'
-        email = self.email_address
-        app_name = self.app_name
-        intent = self.intent
-
-        # Build the request
-        try:
-            r = requests.post(
-                url,
-                data={
-                    'client_vendor': email,
-                    'client_name': app_name,
-                    'intent': intent
-                }
-            )
-            r.raise_for_status()
-
-        except requests.exceptions.RequestException as e:
-            raise SystemExit(e) from e
-
-        # Check for a valid response
-        if not r.json() and 'application/json' not in r.headers['content-type']:
-            raise AuthenticationError("Invalid response")
-        return self.issueTokenResponseToToken(
-            r,
-            self.accounts[account_ID]['url']
-        )
-
-    def __load_accounts_and_users(self) -> None:
-        """Loads the account information related to an ActiveCollab user
-
-        :raise: AuthenticationError() on invalid email, password, response
-        :return: None
-        :rtype: None
-
+        Args:
+            email_address (str): The email address of the user.
+            password (str): The password of the user.
+            your_org_name (str): The name of your organization.
+            your_app_name (str): The name of your application.
         """
+        self.email_address = email_address
+        self.password = password
+        self.your_org_name = your_org_name
+        self.your_app_name = your_app_name
+        self.accounts = {}
+        self.all_accounts = []
+        self.user = {}
+        self.intent = ""
 
-        if self.accounts_and_user_loaded:
-            return
-        # TODO: This is redundant, remove it
-        # We have not loaded the accounts yet
-        # email = self.email_address
-        # password = self.password
+    def get_accounts(self):
+        """
+        Returns a list of all Feather accounts associated with the user.
 
-        if not self.email_address or not self.password:
-            raise AuthenticationError(
-                "Password {password} and email {email} are not valid"
-            )
+        Returns:
+            list: A list of dictionaries representing the Feather accounts.
+        """
+        self._load_accounts_and_user()
+        return list(self.accounts.values())
 
-        # Build the request
-        url = 'https://my.activecollab.com/api/v1/external/login'
-        data = {
-            'email': self.email_address,
-            'password': self.password
-        }
-        headers = {
-            'Content-type': 'application/json',
-            'Accept': 'text/plain'
-        }
+    def get_all_accounts(self):
+        """
+        Returns a list of all accounts associated with the user.
 
-        # Try post to retrieve an intent and account info
-        try:
-            r = requests.post(url, json=data, headers=headers)
-            r.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            raise SystemExit(e) from e
+        Returns:
+            list: A list of dictionaries representing the accounts.
+        """
+        self._load_accounts_and_user()
+        return self.all_accounts
 
-        # Request JSON received
-        if r.json() and r.headers['content-type'] == 'application/json':
-            response = r.json()
+    def get_user(self):
+        """
+        Returns user information.
 
-            # Response Failed to authenticate
-            if not response['is_ok']:
-                # No reason for failure
-                if not response['message']:
-                    raise AuthenticationError('No response received')
-                # Resons for failure provided
-                else:
-                    raise AuthenticationError(response['message'])
+        Returns:
+            dict: A dictionary representing the user information.
+        """
+        self._load_accounts_and_user()
+        return self.user
 
-            # Response failed to generate user intent
-            elif not response['user'] or not response['user']['intent']:
-                raise AuthenticationError('Failed to generate an intent')
-            else:
-                if response['accounts'] or type(response['accounts']) == list:
-                    for account in response['accounts']:
+    def get_intent(self):
+        """
+        Returns the user's intent.
 
-                        if account['class'] in [
-                            'FeatherApplicationInstance',
-                            'ActiveCollab\\Shepherd\\Model\\Account\\\
-                                ActiveCollab\\FeatherAccount',
-                        ]:
-                            self.accounts = account
+        Returns:
+            str: The user's intent.
+        """
+        self._load_accounts_and_user()
+        return self.intent
 
-                # Success, load user values and set account flag to True
-                self.intent = response['user']['intent']
-                self.user = {
-                    'avatar_url': response['user']['avatar_url'],
-                    'first_name': response['user']['first_name'],
-                    'last_name': response['user']['last_name']
-                }
-                self.accounts_and_user_loaded = True
+    def issue_token(self, account_id):
+        """
+        Issues an authentication token for the specified account.
+
+        Args:
+            account_id (int): The ID of the account to issue a token for.
+
+        Returns:
+            str: An authentication token.
+        """
+        if not isinstance(account_id, int):
+            raise ValueError('Account ID must be an integer')
+        self._load_accounts_and_user()
+        if account_id not in self.accounts:
+            raise ValueError(f"Account #{account_id} not loaded")
+        response = post(f"https://app.activecollab.com/{account_id}/api/v1/issue-token-intent", data={
+            'client_vendor': self.your_org_name,
+            'client_name': self.your_app_name,
+            'intent': self.intent
+        })
+        if response.status_code == 200:
+            return f"{response.json().get('token_type')} {response.json().get('access_token')}"
         else:
-            content_type = r.headers['content-type']
-            http_code = r.status_code
-            raise AuthenticationError(
-                f'Invalid response. JSON expected, got {content_type}, \
-                    status code {http_code}'
-                )
+            raise AuthenticationError('Invalid response')
+
+    def _load_accounts_and_user(self):
+        """
+        Loads account and user details from Active Collab ID.
+        """
+        if not self.accounts:
+            response = post('https://my.activecollab.com/api/v1/external/login', data={
+                'email': self.email_address,
+                'password': self.password
+            })
+            if response.status_code == 200:
+                result = response.json()
+                if not result.get('is_ok'):
+                    raise InvalidResponse(result.get('message'))
+                self.accounts = {
+                    int(account.get('name')): {
+                        'id': int(account.get('name')),
+                        'name': account.get('display_name'),
+                        'url': account.get('url')
+                    } for account in result.get('accounts', []) if account.get('class') in
+                    ['FeatherApplicationInstance', r'ActiveCollab\Shepherd\Model\Account\ActiveCollab\FeatherAccount']}
+                self.all_accounts = result.get('accounts', [])
+                self.intent = result.get('user', {}).get('intent', '')
+                self.user = result.get('user', {})
+                self.user.pop('intent', None)
+            else:
+                raise AuthenticationError('Invalid response')
